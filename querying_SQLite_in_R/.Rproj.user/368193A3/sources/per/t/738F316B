@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1586984946593.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "885813529",
+    "id" : "738F316B",
+    "lastKnownWriteTime" : 1587064281,
+    "last_content_update" : 1587064281365,
+    "path" : "E:/Denise/desktop_09-04-2020/Programação/SQL/Dataquest/Intermediate_SQL_in_R/querying_SQLite_in_R/queryingJobsDB.R",
+    "project_path" : "queryingJobsDB.R",
+    "properties" : {
+        "cursorPosition" : "49,0",
+        "scrollLine" : "32",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
