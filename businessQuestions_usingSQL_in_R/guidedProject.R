@@ -272,7 +272,7 @@ finalise_plot(plot_name = employee_sales_bar_chart,
 # You have been given guidance to use the country value from the customers table, 
 # and ignore the country from the billing address in the invoice table.
 
-customer_purchases <- "
+country_purchases <- "
 WITH
     country_purchases AS
         (
@@ -318,241 +318,91 @@ SELECT * FROM other_country_purchases
 ORDER BY sort, purchases DESC
 ;
 "
-customer_purchases_tbl <- run_query(customer_purchases) %>%  tibble()
-customer_purchases_tbl
-
-# 5.1. Visualization ----
+country_purchases_tbl <- run_query(country_purchases) %>%  tibble()
 
 
+# 5.1. Visualization 1 ----
+country_purchases_plot <- country_purchases_tbl %>% 
+    ggplot(aes(x = reorder(country, purchases), 
+               y = purchases,
+               fill = purchases)) +
+    geom_bar(stat = "identity", 
+             position = "identity",
+             fill = "#028090") +
+    scale_y_continuous(limits = c(0, 1200),
+                       breaks = seq(0, 1200, by = 200)) +
+    coord_flip() +
+    geom_hline(yintercept = 0,
+               size = 1,
+               colour = "#333333") +
+    bbc_style() +
+    labs(title = "Sales by country",
+         subtitle = "In dollar (US$)") +
+    theme(panel.grid.major.x = element_line(color = "#cbcbcb"), 
+          panel.grid.major.y = element_blank()) 
+
+# Saving plot
+
+finalise_plot(plot_name = country_purchases_plot, 
+              source = "Source: Chinook record store database.",
+              save_filepath = "img/country_purchases.png")
+
+# According to this analysis, we can see that the USA is the country that sold the most. 
+# However, we should also take into account the average of total sales by number of customers and 
+# how much each one is willing to spend by order.
 
 
+# 5.2. Visualization 2 ----
 
-# Rascunho
-x <- run_query("
-            SELECT
-            CASE
-                WHEN (SELECT COUNT(DISTINCT c.customer_id) FROM customer) = 1 THEN 'Other'
-                ELSE country
-                END AS country,
-            COUNT(DISTINCT c.customer_id) cust_quant,
-            COUNT(i.invoice_id) inv_quant,
-            SUM(i.total) purchases,
-            SUM(i.total)/COUNT(DISTINCT c.customer_id) purc_by_cust,
-            SUM(i.total)/COUNT(i.invoice_id) purc_by_inv,
-            CASE
-                WHEN COUNT(DISTINCT c.customer_id) <= 1 THEN 1
-                ELSE 0
-                END AS sort
-         FROM customer c
-         LEFT JOIN invoice i ON c.customer_id = i.customer_id
-         GROUP BY c.country
-          ORDER BY sort") %>%  tibble()
-x
-run_query("SELECT 
-            COUNT(DISTINCT customer_id),
-            COUNT(country) FROM customer
-          WHERE country = 'USA'")
+avg_cust_purchases_plot <- country_purchases_tbl %>% 
+    ggplot(aes(x = reorder(country, purc_by_cust), 
+               y = purc_by_cust,
+               fill = purc_by_cust)) +
+    geom_bar(stat = "identity", 
+             position = "identity",
+             fill = "#e63946") +
+    scale_y_continuous(limits = c(0, 150),
+                       breaks = seq(0, 140, by = 20)) +
+    coord_flip() +
+    geom_hline(yintercept = 0,
+               size = 1,
+               colour = "#333333") +
+    bbc_style() +
+    labs(title = "Average sales by customer",
+         subtitle = "In dollar (US$)") +
+    theme(panel.grid.major.x = element_line(color = "#cbcbcb"), 
+          panel.grid.major.y = element_blank()) 
 
-run_query("SELECT
-            COUNT(DISTINCT invoice_id),
-            COUNT(DISTINCT customer_id),
-            COUNT(billing_country)
-            FROM invoice")
+# Saving plot
 
-run_query("SELECT SUM(quantity) FROM invoice_line il
-          LEFT JOIN invoice i ON il.invoice_id = i.invoice_id
-          WHERE i.billing_country = 'USA'")
-
-run_query("SELECT
-            c.customer_id,
-            COUNT(i.invoice_id) invoice_quantity,
-            e.first_name || ' ' || e.last_name employee, 
-            e.title,
-            SUM(i.total) total_sales
-        FROM employee e
-        LEFT JOIN customer c ON e.employee_id = c.support_rep_id
-        LEFT JOIN invoice i ON c.customer_id = i.customer_id
-     GROUP BY employee
-     HAVING e.title LIKE '%Support%'
-     ORDER BY invoice_date, employee DESC") %>% tibble()
-
-run_query("
-WITH invoice_sales AS
-    (
-     SELECT 
-        strftime('%Y', invoice_date) year,
-        COUNT(invoice_id) inv_by_year,
-        SUM(total) sales_by_year,
-     FROM invoice
-     GROUP BY year
-     )
-SELECT 
-    year,
-    inv_by_year,
-    sales_by_year,
-    inv_by_year/sales_by_year avg_sales_by_year
-FROM invoice_sales
-;
-")
-
-run_query(" SELECT 
-            strftime('%Y', i.invoice_date) invoice_year,
-            COUNT(i.invoice_id) inv_quant,
-            SUM(i.total) emp_sales,
-            e.first_name || ' ' || e.last_name employee,
-            e.title,
-            e.hire_date
-        FROM employee e
-        LEFT JOIN customer c ON e.employee_id = c.support_rep_id
-        LEFT JOIN invoice i ON c.customer_id = i.customer_id
-        GROUP BY invoice_year, employee
-        HAVING e.title LIKE '%Support%'
-        ORDER BY invoice_year")
-
-run_query("SELECT 
-            strftime('%Y', invoice_date) year,
-            COUNT(invoice_id) inv_quant,
-            SUM(total) year_sales
-         FROM invoice
-         GROUP BY year")
-
-run_query("SELECT 
-            COUNT(DISTINCT country),
-            COUNT(DISTINCT customer_id)
-          FROM customer")
-
-run_query("SELECT country,
-            COUNT(customer_id) num_cust
-          FROM customer
-          GROUP BY country
-          ORDER BY num_cust DESC")
+finalise_plot(plot_name = avg_cust_purchases_plot, 
+              source = "Source: Chinook record store database.",
+              save_filepath = "img/avg_cust_purchases.png")
 
 
-run_query("SELECT
-            c.country,
-            COUNT(DISTINCT c.customer_id) num_cust,
-            COUNT(i.invoice_id) inv_quant,
-            SUM(i.total) purchases
-        FROM customer c
-        LEFT JOIN invoice i ON c.customer_id = i.customer_id
-        GROUP BY c.country
-        ORDER BY c.country") %>% tibble()
+# 5.3 Visualization 3 ----
 
+avg_purchases_by_inv_plot <- country_purchases_tbl %>% 
+    ggplot(aes(x = reorder(country, purc_by_inv), 
+               y = purc_by_inv,
+               fill = purc_by_inv)) +
+    geom_bar(stat = "identity", 
+             position = "identity",
+             fill = "#f4a261") +
+    scale_y_continuous(limits = c(0, 10),
+                       breaks = seq(0, 10, by = 2)) +
+    coord_flip() +
+    geom_hline(yintercept = 0,
+               size = 1,
+               colour = "#333333") +
+    bbc_style() +
+    labs(title = "Average sales by invoice",
+         subtitle = "In dollar (US$)") +
+    theme(panel.grid.major.x = element_line(color = "#cbcbcb"), 
+          panel.grid.major.y = element_blank()) 
 
+# Saving plot
 
-# Selecting New Albums to Purchase
-
-albums_to_purchase = '
-WITH usa_tracks_sold AS
-   (
-    SELECT il.* FROM invoice_line il
-    INNER JOIN invoice i on il.invoice_id = i.invoice_id
-    INNER JOIN customer c on i.customer_id = c.customer_id
-    WHERE c.country = "USA"
-   )
-SELECT
-    g.name genre,
-    count(uts.invoice_line_id) tracks_sold,
-    cast(count(uts.invoice_line_id) AS FLOAT) / (
-        SELECT COUNT(*) from usa_tracks_sold
-    ) percentage_sold
-FROM usa_tracks_sold uts
-INNER JOIN track t on t.track_id = uts.track_id
-INNER JOIN genre g on g.genre_id = t.genre_id
-GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 10;
-'
-run_query(albums_to_purchase)
-
-library(ggplot2)
-genre_sales = run_query(albums_to_purchase)
-ggplot(data = genre_sales, aes(x = reorder(genre, -percentage_sold), 
-                               y = percentage_sold)) +
-    geom_bar(stat = "identity") +
-    coord_flip()
-
-#Among the genres represented in our list of 4 albums, punk, blues and pop are the highest rated. Therefore, we should recommend:
-    
-#- Red Tone (Punk)
-#- Slim Jim Bites (Blues)
-#- Meteor and the Girls (Pop)
-
-#By far though, rock makes up the majority of the sales. To better capture sales in the USA, we might want to ask the record label if they have any up-and-coming rock bands.
-
-
-# Analyzing Employee Sales Performance
-
-employee_sales_performance = '
-WITH customer_support_rep_sales AS
-    (
-     SELECT
-         i.customer_id,
-         c.support_rep_id,
-         SUM(i.total) total
-     FROM invoice i
-     INNER JOIN customer c ON i.customer_id = c.customer_id
-     GROUP BY 1,2
-    )
-SELECT
-    e.first_name || " " || e.last_name employee,
-    e.hire_date,
-    SUM(csrs.total) total_sales
-FROM customer_support_rep_sales csrs
-INNER JOIN employee e ON e.employee_id = csrs.support_rep_id
-GROUP BY 1;
-'
-run_query(employee_sales_performance)
-
-
-employee_sales = run_query(employee_sales_performance)
-ggplot(data = employee_sales, aes(x = reorder(employee, -total_sales), 
-                                  y = total_sales)) +
-    geom_bar(stat = "identity")
-
-# Jane Peacock has the highest amount of sales, but she also has been at the company the longest. If we really want to hone in on employee efficiency, we might want to standardize sales by the number of days or hours worked.
-
-
-# Visualizing Sales by Country
-sales_by_country = '
-WITH country_or_other AS
-    (
-     SELECT
-       CASE
-           WHEN (
-                 SELECT count(*)
-                 FROM customer
-                 where country = c.country
-                ) = 1 THEN "Other"
-           ELSE c.country
-       END AS country,
-       c.customer_id,
-       il.*
-     FROM invoice_line il
-     INNER JOIN invoice i ON i.invoice_id = il.invoice_id
-     INNER JOIN customer c ON c.customer_id = i.customer_id
-    )
-SELECT
-    country,
-    customers,
-    total_sales,
-    average_order,
-    customer_lifetime_value
-FROM
-    (
-    SELECT
-        country,
-        count(distinct customer_id) customers,
-        SUM(unit_price) total_sales,
-        SUM(unit_price) / count(distinct customer_id) customer_lifetime_value,
-        SUM(unit_price) / count(distinct invoice_id) average_order,
-        CASE
-            WHEN country = "Other" THEN 1
-            ELSE 0
-        END AS sort
-    FROM country_or_other
-    GROUP BY country
-    ORDER BY sort ASC, total_sales DESC
-    );
-'
-run_query(sales_by_country) %>% tibble()
+finalise_plot(plot_name = avg_purchases_by_inv_plot, 
+              source = "Source: Chinook record store database.",
+              save_filepath = "img/avg_purchases_by_inv.png")

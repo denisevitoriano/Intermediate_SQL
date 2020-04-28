@@ -5,17 +5,17 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "3920317003",
+    "hash" : "3883818797",
     "id" : "EE52ABB0",
-    "lastKnownWriteTime" : 1587796296,
-    "last_content_update" : 1587796296428,
-    "path" : "C:/Users/denis/Desktop/Dataquest/Intermediate_SQL_in_R/businessQuestions_usingSQL/guidedProject.R",
+    "lastKnownWriteTime" : 1588035642,
+    "last_content_update" : 1588035642327,
+    "path" : "C:/Users/denis/Desktop/Dataquest/Intermediate_SQL/businessQuestions_usingSQL_in_R/guidedProject.R",
     "project_path" : "guidedProject.R",
     "properties" : {
-        "cursorPosition" : "328,0",
+        "cursorPosition" : "353,0",
         "docOutlineSize" : "134.7223059339715",
         "docOutlineVisible" : "0",
-        "scrollLine" : "314"
+        "scrollLine" : "336"
     },
     "read_only" : false,
     "read_only_alternatives" : [
